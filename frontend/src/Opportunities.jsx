@@ -24,11 +24,8 @@ export default function Opportunities() {
   async function EventSubmit() {
     try {
       const token = localStorage.getItem("token");
-      const response2 = await axios.post(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/registerevent/`,{
-          user_id:usrData["Id"],
-          event_id:events[Index].id
-        },
+      const response2 = await axios.get(
+        `http://127.0.0.1:8000/04D2430AAFE10AA4/event/signup/`+usrData["User"]+`/`+(Index+1)+`/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -37,11 +34,6 @@ export default function Opportunities() {
       );
       alert(response2.data.message)
     }catch(error){
-      if(error === "AxiosError: Request failed with status code 400"){
-        alert("You have already signed up for that event");
-      } else {
-        alert(error);
-      }
       
     }
 
@@ -125,30 +117,33 @@ export default function Opportunities() {
 
       {events !== null && events !== undefined && events[Index] && (
   <div className="notifications-container rounded-3xl w-2/5 ml-72 border absolute left-96 top-36 border-4 border-green-200">
-    <div className="success">
-      <div className="flex">
-        <div className="flex-shrink-0"></div>
-        <div className="success-prompt-wrap">
-          <p className="success-prompt-heading text-5xl">{events[Index]?.Event_Name}</p>
-          <div className="success-prompt-prompt text-xl font-bold">
-            <p>Hosted by: {events[Index]?.Organization_Name}</p>
-          </div>
-          <div className="success-prompt-prompt mb-3">
-            <p>Description: {events[Index]?.Event_Description}</p>
-          </div>
-          <div className="success-prompt-prompt text-red-400 text-lg font-bold">
-            <p>Restrictions: {events[Index]?.Event_Restrictions}</p>
-          </div>
-          <div className="success-prompt-prompt mb-3 font-bold">
-            <p>{events[Index]?.Event_Location} @ {events[Index]?.Event_Time}</p>
-          </div>
-          <div className="success-button-container ml-[480px]">
+  <div className="success">
+    <div className="flex">
+      <div className="flex-shrink-0"></div>
+      <div className="success-prompt-wrap">
+        <p className="success-prompt-heading text-5xl">{events[Index]?.Event_Name}</p>
+        <div className="success-prompt-prompt text-xl font-bold">
+          <p>Goal: {events[Index]?.Event_Goal}</p>
+        </div>
+        <div className="success-prompt-prompt text-lg mb-3">
+          <p>Hosted By: {events[Index]?.Username}</p>
+        </div>
+        <div className="success-prompt-prompt text-lg mb-3">
+          <p>Description: {events[Index]?.Event_Description}</p>
+        </div>
+        <div className="success-prompt-prompt text-lg mb-3">
+          <p># of Participants: {events[Index]?.Volunteers.length}</p>
+        </div>
+        <div className="success-prompt-prompt mb-3 font-bold">
+          <p>{events[Index]?.Event_Time_Start} till {events[Index]?.Event_Time_End} @ {events[Index]?.Event_Location}</p>
+        </div>
+        <div className="success-button-container ml-[480px]">
             <button type="button" className="success-button-main bg-green-400" onClick={(e)=>EventSubmit(e)}>Register</button>
           </div>
-        </div>
       </div>
     </div>
   </div>
+</div>
 )}
 
 

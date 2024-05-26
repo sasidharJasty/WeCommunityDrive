@@ -11,10 +11,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
+    "@lob/react-address-autocomplete": "^2.2.0",
     "@mui/x-charts": "^7.1.1",
     "@splinetool/react-spline": "^2.2.6",
     "@splinetool/runtime": "^1.0.93",
     "axios": "^1.6.8",
+    "lodash": "^4.17.21",
+    "quagga": "^0.12.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropdown-select": "^4.11.2",

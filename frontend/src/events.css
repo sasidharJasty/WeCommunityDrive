@@ -14,11 +14,7 @@ width: calc(70% );
     overflow-y: auto; 
   }
   .main2{
-    position: absolute;
-      top: 48%;
-      left: 67%;
-      margin-right: -50%;
-      transform: translate(-50%, -50%);
+
     width: 500px;
     height: 580px;
     background: rgb(255, 255, 255);

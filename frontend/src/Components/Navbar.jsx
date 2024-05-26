@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Logo from "../assets/img2.png";
+import Logo from "../assets/logo.png";
 import axios from "axios";
 import "./Nav.css";
 import { useNavigate } from "react-router-dom";
@@ -47,7 +47,7 @@ function Navbar() {
           User: "false",
           Username: "false",
           Id: -999,
-          Group: "Student",
+          Group: "Volunteer",
         })
       );
     } catch (error) {
@@ -55,46 +55,47 @@ function Navbar() {
     }
   }
 
+
   return (
-    <nav className="fixed border-gray-200 z-50 top-0 bg-transparent max-w-screen  pb-2 w-screen mb-40 justify-center justify-content-center text-center bg-opacity-80 dark:bg-opacity-95">
+    <nav className="fixed border-gray-200 z-50 top-0 bg-blur-xl max-w-screen  pb-2 w-screen mb-40 justify-center justify-content-center text-center bg-opacity-80 dark:bg-opacity-95">
       <div className="w-screen flex flex-wrap items-center justify-between">
         <a href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
           <h2 className="my-4 ml-20 Logo-txt verticalLine pr-2 font-black logo">
             <img src={Logo} className="NAV-Logo" alt="Logo" />
           </h2>
-          <span className="text-left Logo-sd font-bold text-4xl  whitespace-nowrap text-black dark:text-black">
-            BridgeHands
+          <span className="text-left Logo-sd font-bold text-2xl  whitespace-nowrap text-black dark:text-black">
+            WeCommunity<br/>Drive
             </span>
 
         </a>
         <div className="items-center md:order-2 space-x-3 mr-80 rtl:space-x-reverse ">
           <div
-            className="relative"
-            onMouseEnter={() => setSelect(true)}
-            onMouseLeave={() => setSelect(false)}
+            className="relative mr-20"
+            onClick={()=>setSelect(!Selects)}
+
           >
             <button
               type="button"
-              className="flex px-3 mr-40 py-2 btn-txt rounded-xl md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+              className="flex px-3 mr-40 py-2 btn-txt  rounded-xl md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 z-[999]"
               id="user-menu-button"
               aria-expanded="false"
               data-dropdown-toggle="user-dropdown"
               data-dropdown-placement="bottom"
               onClick={handleOpen}
             >
-              <span className="sr-only">Open user menu</span>
-              <div className="">
+              <span className="sr-only" onClick={handleOpen}>Open user menu</span>
+              <div className="" onClick={handleOpen}>
                 {user !== -999 ? (
                   <p className="">{usrData["Username"]} ▼</p>
                 ) : (
-                  <a className="green hover:text-white" href="/login/">
+                  <p className="">
                     Log In
-                  </a>
+                  </p>
                 )}
               </div>
             </button>
             {Selects && user !== -999 && (
-              <div className="absolute top-full content left-0 mt-1 bg-white divide-y divide-gray-100 rounded-lg shadow-xl dark:bg-white  dark:divide-gray-600">
+              <div className="absolute top-full z-[999] content left-0 mt-1 bg-white divide-y divide-gray-100 rounded-lg shadow-xl  dark:divide-gray-600">
                 <div className="px-4 py-3">
                   <span className="block text-sm  ">
                     {usrData["User"]}
@@ -103,7 +104,7 @@ function Navbar() {
                     {usrData["Id"]}
                   </span>
                 </div>
-                {usrData["type"]==="Organizer" ? (<ul className="py-2" aria-labelledby="user-menu-button">
+                {usrData["userType"]==="Organizer" ? (<ul className="py-2" aria-labelledby="user-menu-button">
                     <li>
                       <a
                         href="/dashboard"
@@ -113,28 +114,21 @@ function Navbar() {
                       </a>
                     </li>
                     <li>
-                    <a href="/opportunities/"
+                    <a href="/volunteer/"
                       className="block px-4 py-2 text-sm  hover:bg-gray-100 text-black"
                       onClick={openPopup}
                     >
-                      Opportunity
+                      Volunteer
                     </a>
                   </li>
 
                   
+
                   <li>
-                    <a
-                      href="/Org/"
-                      className="block px-4 py-2 text-sm  hover:bg-gray-10 text-black"
-                    >
-                      Create an Organization
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/Orgevent/"
+                    <a href="/orgevent/"
                       className="block px-4 py-2 text-sm  hover:bg-gray-100 text-black"
                     >
-                      Create an Event
+                      Organize Event
                     </a>
                   </li>
                   <li>
@@ -193,7 +187,7 @@ function Navbar() {
             </li>
             <li>
               <a
-                href="/soon/"
+                href="/about/"
                 className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-black md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-black md:dark:hover:bg-transparent dark:border-gray-700"
               >
                 About
@@ -201,7 +195,7 @@ function Navbar() {
             </li>
             <li>
               <a
-                href="/soon/"
+                href="/programs/"
                 className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-black md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-black md:dark:hover:bg-transparent dark:border-gray-700"
               >
                 Programs
@@ -209,7 +203,7 @@ function Navbar() {
             </li>
             <li>
               <a
-                href="/soon/"
+                href="/membership/"
                 className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-black md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-black md:dark:hover:bg-transparent dark:border-gray-700"
               >
                 Membership

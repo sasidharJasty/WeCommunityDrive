@@ -33,6 +33,10 @@
     color:white !important;
   }
 
+  #user-menu-button:hover{
+    color: white !important;
+  }
+
   .NAV-Logo {
     width: auto;
     max-height: 8vh;

@@ -1,0 +1,9 @@
+.title {
+    font-size: 5rem;
+    font-weight: bold;
+    color: rgb(0,201,157);
+}
+
+.description {
+    width: 50%;
+}

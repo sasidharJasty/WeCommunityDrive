@@ -25,7 +25,7 @@ export default function Login() {
         userType: UserType,
       });
       if (UserType === "Organizer"){
-        history("/Org/");
+        history("/orgevent/");
       }else {  history("/");}
       
       setErr("");
@@ -55,6 +55,7 @@ export default function Login() {
       axios.defaults.headers.common["Authorization"] = `Token ${token}`;
       localStorage.setItem("token", JSON.stringify(token));
       localStorage.setItem("Data", JSON.stringify(response.data));
+      console.log(response.data);
     } catch (error) {
       setErr(error.response.data.error);
     }
