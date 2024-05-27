@@ -1,4 +1,3 @@
-"""
 import cv2
 from pyzbar.pyzbar import decode
 
@@ -18,7 +17,15 @@ def BarcodeReader(frame):
             cv2.rectangle(frame, (x-10, y-10), (x + w+10, y + h+10), (255, 0, 0), 2)
             
             if barcode.data != "":
-                # Print the barcode data
+                # font 
+                font = cv2.FONT_HERSHEY_SIMPLEX 
+                org = (50, 50) 
+                fontScale = 1
+                color = (255, 0, 0) 
+                thickness = 2
+   
+                frame = cv2.putText(frame, barcode.data.decode('utf-8'), org, font,  
+                   fontScale, color, thickness, cv2.LINE_AA)  
                 print("Data:", barcode.data.decode('utf-8'))
 
     return frame
@@ -52,7 +59,6 @@ if __name__ == "__main__":
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
-"""
 """
 import numpy as np
 import cv2
@@ -93,51 +99,3 @@ def detect(image):
 	# return the bounding box of the barcode
 	return box
 """
-from pyimagesearch import simple_barcode_detection
-from imutils.video import VideoStream
-import argparse
-import time
-import cv2
-ap = argparse.ArgumentParser()
-ap.add_argument("-v", "--video",
-	help="path to the (optional) video file")
-args = vars(ap.parse_args())
-# if the video path was not supplied, grab the reference to the
-# camera
-if not args.get("video", False):
-	vs = VideoStream(src=0).start()
-	time.sleep(2.0)
-else:
-	vs = cv2.VideoCapture(args["video"])
-
-# keep looping over the frames
-while True:
-	# grab the current frame and then handle if the frame is returned
-	# from either the 'VideoCapture' or 'VideoStream' object,
-	# respectively
-	frame = vs.read()
-	frame = frame[1] if args.get("video", False) else frame
- 
-	# check to see if we have reached the end of the
-	# video
-	if frame is None:
-		break
-	# detect the barcode in the image
-	box = simple_barcode_detection.detect(frame)
-	# if a barcode was found, draw a bounding box on the frame
-	if box is not None:
-		cv2.drawContours(frame, [box], -1, (0, 255, 0), 2)
-	# show the frame and record if the user presses a key
-	cv2.imshow("Frame", frame)
-	key = cv2.waitKey(1) & 0xFF
-	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
-# if we are not using a video file, stop the video file stream
-if not args.get("video", False):
-	vs.stop()
-# otherwise, release the camera pointer
-else:
-	vs.release()
-# close all windows
-cv2.destroyAllWindows()

@@ -214,9 +214,9 @@ def add_item(request, item, quantity, event_id):
     event.items[item] = event.items.get(item, 0) + quantity
     event.items = json.dumps(event.items)
     event.save()
-    return event.items
+    return JsonResponse({'event': event.items})
 
 @api_view(['GET'])
 def get_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-    return JsonResponse({'items': event.items})
+    return JsonResponse({'event': event.items, 'name': event.Event_Name})

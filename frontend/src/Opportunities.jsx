@@ -32,7 +32,7 @@ export default function Opportunities() {
           },
         }
       );
-      alert(response2.data.message)
+      alert("Signed up for "+ events[Index].Event_Name)
     }catch(error){
       
     }
@@ -137,7 +137,8 @@ export default function Opportunities() {
         <div className="success-prompt-prompt mb-3 font-bold">
           <p>{events[Index]?.Event_Time_Start} till {events[Index]?.Event_Time_End} @ {events[Index]?.Event_Location}</p>
         </div>
-        <div className="success-button-container ml-[480px]">
+        <div className="success-button-container ml-[400px]">
+           <button type="button" className="success-button-main bg-green-400 mr-5" onClick={()=>history("/event/"+(Index+1))}>Visit</button>
             <button type="button" className="success-button-main bg-green-400" onClick={(e)=>EventSubmit(e)}>Register</button>
           </div>
       </div>
