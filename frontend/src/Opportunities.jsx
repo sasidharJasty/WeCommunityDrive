@@ -135,7 +135,7 @@ export default function Opportunities() {
           <p># of Participants: {events[Index]?.Volunteers.length}</p>
         </div>
         <div className="success-prompt-prompt mb-3 font-bold">
-          <p>{events[Index]?.Event_Time_Start} till {events[Index]?.Event_Time_End} @ {events[Index]?.Event_Location}</p>
+          <p>Start Time: {events[Index]?.Event_Time_Start} <br/>End time: {events[Index]?.Event_Time_End} <br/>Location: {events[Index]?.Event_Location}</p>
         </div>
         <div className="success-button-container ml-[400px]">
            <button type="button" className="success-button-main bg-green-400 mr-5" onClick={()=>history("/event/"+(Index+1))}>Visit</button>

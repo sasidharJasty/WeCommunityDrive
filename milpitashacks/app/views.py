@@ -4,7 +4,10 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import json
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt
+import time
+import datetime
+from operator import itemgetter
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -60,20 +63,19 @@ class SignupView(APIView):
         password = request.data.get('password')
         email = request.data.get('email')
         userType = request.data.get('userType')
+        print(request.data)
         
         if not username or not password:
             return Response({'error': 'Username and password are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(username=username).exists():
-            return Response({'error': 'Username already taken'}, status=status.HTTP_400_BAD_REQUEST)
-        elif User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists():
             return Response({'error': 'Email already taken'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             user = User.objects.create_user(username=username, email=email, password=password, userType=userType)
 
             token, created = Token.objects.get_or_create(user=user)
 
-            return Response({'User': username, 'Username': user.username,  'type': userType, 'token': token.key})
+            return Response({'Id': user.id, 'User': user.email, 'Username': user.username,  'userType': userType, 'token': token.key})
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -91,7 +93,7 @@ class LoginView(APIView):
         if user is not None:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'User': username, 'Username': user.username, 'userType': user.userType, 'token': token.key})
+            return Response({'Id': user.id, 'User': user.email, 'Username': user.username,  'userType': user.userType, 'token': token.key})
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -100,11 +102,13 @@ def soon(request):
 
 def pagenotfound(request):
     return render(request, "pagenotfound.html")
+from django.views.decorators.csrf import csrf_protect
 
+@csrf_protect
 @api_view(['POST'])
 def logout_view(request):
     logout(request)
-    return JsonResponse({'message': 'Logout successful'})
+    return JsonResponse({'message': 'Logout successful'})  
 
 class Event_View(APIView):
     permission_classes = [AllowAny]
@@ -114,7 +118,30 @@ class Event_View(APIView):
         '''
         Create an Event with given data
         '''
-        serializer = EventSerializer(data=request.data)
+        start = request.data.get('Event_Time_Start')
+        end = request.data.get('Event_Time_End')
+
+        fs2 = datetime.datetime.strptime(start.split("T")[0], '%Y-%m-%d').strftime('%m/%d/%y')
+        fe2 = datetime.datetime.strptime(end.split("T")[0], '%Y-%m-%d').strftime('%m/%d/%y')
+        start_t = time.strptime(start.split("T")[1], "%H:%M")
+        end_t = time.strptime(end.split("T")[1], "%H:%M")
+        start_time = time.strftime("%I:%M %p", start_t)
+        end_time = time.strftime("%I:%M %p", end_t)
+
+        formatted_start = fs2 + " at " + start_time
+        formatted_end = fe2 + " at " + end_time
+
+        serializer_data = {
+            'Event_Name': request.data.get('Event_Name'),
+            'Event_Goal': request.data.get('Event_Goal'),
+            'Event_Description': request.data.get('Event_Description'),
+            'Event_Location': request.data.get('Event_Location'),
+            'Event_Time_Start': formatted_start,
+            'Event_Time_End': formatted_end,
+            'Username': request.data.get('Username'),
+        }
+
+        serializer = EventSerializer(data=serializer_data)
         
         if serializer.is_valid():
             serializer.save()
@@ -184,8 +211,11 @@ def get_user_events(request, lat, lon, dist):
         except (IndexError, KeyError, ValueError):
             continue
     
-    serializer = EventSerializer(nearby_events, many=True)
-    return Response({'Events': serializer.data, 'Distances': distances}, status=status.HTTP_200_OK)
+    # Sort events by distance
+    sorted_events = [event for _, event in sorted(zip(distances, nearby_events), key=itemgetter(0))]
+
+    serializer = EventSerializer(sorted_events, many=True)
+    return Response({'Events': serializer.data, 'Distances': sorted(distances)}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def event_signup(request, em, event_id):
@@ -220,3 +250,15 @@ def add_item(request, item, quantity, event_id):
 def get_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     return JsonResponse({'event': event.items, 'name': event.Event_Name})
+
+@api_view(['GET'])
+def participant_filter(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        print(user)
+        events_participated = Event.objects.filter(participants=user)
+
+        serialized_events = EventSerializer(events_participated, many=True)
+        return Response({'events_participated': serialized_events.data}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)

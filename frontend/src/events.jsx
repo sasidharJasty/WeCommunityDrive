@@ -88,7 +88,7 @@ export default function Event() {
 
   return (
     <>
-      <img src={pattern} style={{ height: "100vh" }} className="absolute right-0" />
+      <img src={pattern} style={{ height: "100vh" }} className="absolute right-0 top-0" />
       <h1 className="green-txt absolute text-3xl font-black ml-10 mt-5 left-40 top-20"> Your Events</h1>
       <button className="flex px-3 mr-40 py-2 btn-txt rounded-xl absolute ml-80 mt-5 left-40 top-20" onClick={()=>setPopup(true)}>Create +</button>
       <div className="absolute left-10 w-2/5 top-20 mt-20 scrollable-container">
@@ -123,13 +123,13 @@ export default function Event() {
             <p># of Participants: {events[Index]?.Volunteers.length}</p>
           </div>
           <div className="success-prompt-prompt mb-3 font-bold">
-            <p>{events[Index]?.Event_Time_Start} till {events[Index]?.Event_Time_End} @ {events[Index]?.Event_Location}</p>
+            <p>Start Time: {events[Index]?.Event_Time_Start} <br/>End time: {events[Index]?.Event_Time_End} <br/>Location: {events[Index]?.Event_Location}</p>
           </div>
         </div>
       </div>
     </div>
   </div>
-)} {events.length === 0  && (<h1 className='text-red-400 text-4xl text-center mt-[10vw]'>No Events Near You <br/> At this Time</h1>)}
+)} {events.length === 0  && (<h1 className='text-red-400 text-4xl text-center mt-[10vw]'>No Events Created</h1>)}
 
       
       

@@ -1,56 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import Quagga from 'quagga';
+import Barcode from 'react-barcode';
+import { useZxing } from 'react-zxing';
+import PropTypes from 'prop-types';
+import { useParams } from 'react-router-dom';
 
-const BarcodeScanner = () => {
-  const [barcodeData, setBarcodeData] = useState('');
+export default function CodexApp() {
+  const [scan, setScan] = useState(null);
+  const [devices, setDevices] = useState([]);
+  const { deviceId } = useParams();
+
+  const { ref } = useZxing({
+    onResult(newScan) {
+      setScan(newScan);
+    },
+    deviceId
+  });
 
   useEffect(() => {
-    Quagga.init({
-      inputStream : {
-        name : "Live",
-        type : "LiveStream",
-        target: document.querySelector('#scanner-container'),
-        constraints: {
-          width: 640,
-          height: 480,
-          facingMode: "environment"
+    (async () => {
+      try {
+        const availableDevices = await navigator.mediaDevices.enumerateDevices();
+        const availableVideoDevices = availableDevices.filter(device => device.kind === 'videoinput');
+        if (availableVideoDevices.length === 0) {
+          alert('No cameras found');
         }
-      },
-      decoder : {
-        readers : ["ean_reader"] // You can change this depending on the type of barcode you want to scan
+        else {
+          setDevices(availableVideoDevices);
+        }
       }
-    }, function(err) {
-      if (err) {
-        console.error(err);
-        return;
+      catch (e) {
+        alert('Failed to find cameras. This could be permissions problem');
       }
-      console.log("Initialization finished. Ready to start");
-      Quagga.start();
-    });
-
-    Quagga.onDetected(function(result) {
-      const barcode = result.codeResult.code;
-      console.log("Barcode detected and processed : [" + barcode + "]");
-      setBarcodeData(barcode);
-    });
-
-    return () => {
-      Quagga.stop();
-    };
+    })();
   }, []);
+
+  const handleDownloadBackup = (barcodes) => {
+    const element = document.createElement('a');
+    const file = new Blob([JSON.stringify(barcodes)], { type: 'application/json' });
+    element.href = URL.createObjectURL(file);
+    element.download = 'codex-backup.json';
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const handleUploadBackup = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const barcodes = JSON.parse(e.target.result);
+      setScan(barcodes);
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div>
-      <h1>Barcode Scanner</h1>
-      <div id="scanner-container"></div>
-      {barcodeData && (
-        <div>
-          <h2>Detected Barcode:</h2>
-          <p>{barcodeData}</p>
-        </div>
-      )}
+      <div>
+        <h2>Scan Barcode:</h2>
+        <video width="300" ref={ref} />
+      </div>
+      <div>
+        <h2>Render Barcode:</h2>
+        {scan && <Barcode value={scan.text} format={scan.format} height={200} />}
+      </div>
+      <div>
+        <button onClick={() => handleDownloadBackup(scan)}>Download Backup</button>
+        <input type="file" accept="application/json" onChange={handleUploadBackup} />
+      </div>
     </div>
   );
-};
+}
 
-export default BarcodeScanner;
+CodexApp.propTypes = {
+  code: PropTypes.string.isRequired, // the customer ID number
+  format: PropTypes.string.isRequired // e.g. CODE39 or CODE128
+};

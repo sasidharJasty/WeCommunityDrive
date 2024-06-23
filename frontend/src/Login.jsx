@@ -83,7 +83,7 @@ export default function Login() {
                 <span className="name">Organizer</span>
               </label>
             </div>
-            <input className="py-5 m-auto mb-5" type="text" name="txt" placeholder="User Name: " required="" onChange={(e) => setUsername(e.target.value)} />
+            <input className="py-5 m-auto mb-5" type="name" name="txt" placeholder="Full Name: " required="" onChange={(e) => setUsername(e.target.value)} />
             <input className="py-5 m-auto mb-5" type="email" name="email" placeholder="Email: " required="" onChange={(e) => setEmail(e.target.value)} />
             <input className="py-5 m-auto mb-5" type="password" name="pswd" placeholder="Password" required="" onChange={(e) => setPassword(e.target.value)} />
             <button className="m-auto button" type="submit">

@@ -10,6 +10,22 @@ function Navbar() {
   const [Selects, setSelect] = useState(false);
   const [user, setuser] = useState(JSON.parse(localStorage.getItem("Data") || "{}")["Id"]);
   const history = useNavigate();
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
 
   const closePopup = () => {
     setSelectedItem(false);
@@ -28,6 +44,7 @@ function Navbar() {
   };
 
   useEffect(() => {
+    console.log(usrData);
     if (user === -999) {
       setuser(-999);
     }
@@ -35,25 +52,32 @@ function Navbar() {
 
   async function logout() {
     try {
-      await axios.post("http://127.0.0.1:8000/04D2430AAFE10AA4/logout/");
-      setSelect(false);
-      setuser(-999);
-      localStorage.removeItem("token");
-      localStorage.clear();
-      delete axios.defaults.headers.common["Authorization"];
-      localStorage.setItem(
-        "Data",
-        JSON.stringify({
-          User: "false",
-          Username: "false",
-          Id: -999,
-          Group: "Volunteer",
-        })
-      );
+        setSelect(false);
+        setuser(-999);
+        localStorage.removeItem("token");
+        localStorage.clear();
+        delete axios.defaults.headers.common["Authorization"];
+        localStorage.setItem(
+            "Data",
+            JSON.stringify({
+                User: "false",
+                Username: "false",
+                Id: -999,
+                Group: "Volunteer",
+            })
+        );
+        setuser("{'User':'false','Username':'false','Id':-999,'Group':'Volunteer'}")
+        await axios.post("http://127.0.0.1:8000/04D2430AAFE10AA4/logout/", {}, {
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            withCredentials: true,
+        });
+        
     } catch (error) {
-      console.error("Logout failed:", error.response.data);
+        console.error("Logout failed:", error.response ? error.response.data : error.message);
     }
-  }
+}
 
 
   return (
@@ -152,11 +176,11 @@ function Navbar() {
                   
 
                   <li>
-                    <a href="/opportunities/"
+                    <a href="/volunteer/"
                       className="block px-4 py-2 text-sm  hover:bg-gray-100 text-black"
                       onClick={openPopup}
                     >
-                      Opportunity
+                      Volunteer
                     </a>
                   </li>
                   <li>
