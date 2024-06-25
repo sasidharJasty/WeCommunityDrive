@@ -22,6 +22,8 @@ from .serializers import UserSerializer, ChangePasswordSerializer, EventSerializ
 from django.conf import settings
 import requests
 from haversine import haversine, Unit
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
 from requests.structures import CaseInsensitiveDict
 from django.http import JsonResponse
 
@@ -49,9 +51,9 @@ def change_password(request):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['email']
+    filterset_fields = ['id']
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -138,6 +140,7 @@ class Event_View(APIView):
             'Event_Location': request.data.get('Event_Location'),
             'Event_Time_Start': formatted_start,
             'Event_Time_End': formatted_end,
+            'user_id': request.data.get('user_id'),
             'Username': request.data.get('Username'),
         }
 
@@ -155,12 +158,12 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['Username']
+    filterset_fields = ['user_id']
 
 class Register_View(APIView):
     permission_classes = [AllowAny]
+    
 
-    @csrf_exempt
     def post(self, request, *args, **kwargs):
         user_id = request.data.get('user_id')
         event_id = request.data.get('event_id')
@@ -169,10 +172,10 @@ class Register_View(APIView):
             user = User.objects.get(id=user_id)
             event = Event.objects.get(id=event_id)
 
-            if user in event.participants.all():
+            if user in event.Volunteers.all():
                 return Response({'error': 'User is already registered for this event'}, status=status.HTTP_400_BAD_REQUEST)
 
-            event.participants.add(user)
+            event.Volunteers.add(user)
             event.save()
 
             return Response({'message': 'User registered successfully for the event'}, status=status.HTTP_201_CREATED)
@@ -180,6 +183,7 @@ class Register_View(APIView):
             return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
         except Event.DoesNotExist:
             return Response({'error': 'Event does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
         
 
 from django.http import JsonResponse
@@ -230,8 +234,20 @@ def scan_barcode(request):
 
 import json
 
-@api_view(['GET'])
-def add_item(request, item, quantity, event_id):
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Event
+import json
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['POST'])
+def add_item(request):
+    event_id = request.data.get('event_id')
+    item = request.data.get('item')
+    quantity = request.data.get('quantity')
+    
     event = get_object_or_404(Event, id=event_id)
     
     if not isinstance(event.items, dict):
@@ -246,6 +262,50 @@ def add_item(request, item, quantity, event_id):
     event.save()
     return JsonResponse({'event': event.items})
 
+@api_view(['PUT'])
+def edit_item(request):
+    event_id = request.data.get('event_id')
+    item = request.data.get('item')
+    new_quantity = request.data.get('quantity')
+    
+    event = get_object_or_404(Event, id=event_id)
+    
+    if not isinstance(event.items, dict):
+        try:
+            event.items = json.loads(event.items)
+        except (json.JSONDecodeError, TypeError):
+            event.items = {}
+
+    if item in event.items:
+        event.items[item] = new_quantity
+        event.items = json.dumps(event.items)
+        event.save()
+        return JsonResponse({'event': event.items})
+    else:
+        return JsonResponse({'error': 'Item not found'}, status=404)
+
+@api_view(['DELETE'])
+def delete_item(request):
+    event_id = request.data.get('event_id')
+    item = request.data.get('item')
+    
+    event = get_object_or_404(Event, id=event_id)
+    
+    if not isinstance(event.items, dict):
+        try:
+            event.items = json.loads(event.items)
+        except (json.JSONDecodeError, TypeError):
+            event.items = {}
+    
+    if item in event.items:
+        del event.items[item]
+        event.items = json.dumps(event.items)
+        event.save()
+        return JsonResponse({'event': event.items})
+    else:
+        return JsonResponse({'error': 'Item not found'}, status=404)
+
+
 @api_view(['GET'])
 def get_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -256,7 +316,7 @@ def participant_filter(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         print(user)
-        events_participated = Event.objects.filter(participants=user)
+        events_participated = Event.objects.filter(Volunteers=user)
 
         serialized_events = EventSerializer(events_participated, many=True)
         return Response({'events_participated': serialized_events.data}, status=status.HTTP_200_OK)
