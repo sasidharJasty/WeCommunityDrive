@@ -2,132 +2,257 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Components/Navbar";
+import useUserLocation from "./Components/useUserLocation";
 import "./hours.css";
 import pattern from "./assets/pattern.png";
 
 const Hours = () => {
-  const [hours, setHours] = useState("");
-  const [teamLead, setTeamLead] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [resp, setResp] = useState([]);
-  const [resp2, setResp2] = useState([""]);
+  const [resp, setresp] = useState([]);
+  const [resp2, setresp2] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [buttonClicked, setButtonClicked] = useState(false);
-  const [popup1, setPopup1] = useState(false); // First popup state
-  const [popup2, setPopup2] = useState(false); // Second popup state
-  const [err, setErr] = useState("");
+  const [distance, setDistance] = useState(5);
+  const { userLocation, getUserLocation } = useUserLocation();
+  const [events, setEvents] = useState([]);
+  const [signedUpEvents, setsignedUpEvents] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [err, seterr] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [status, setStatus] = useState(""); // Missing status state
+  const usrData = JSON.parse(
+    localStorage.getItem("Data") ||
+      '{"User":"Login","Age":0,"Username":"Login","Id":-999,"type":"Volunteer"}'
+  );
+  const history = useNavigate();
 
-  const usrData = JSON.parse(localStorage.getItem("Data") || '{"User":"Login","Username":"Login","Id":-999,"type":"Volunteer"}');
-  const navigate = useNavigate();
+  if (usrData["Id"] === -999) {
+    history("/");
+  }
+  const isUserRegistered = (event) => {
+    return (
+      event.participants &&
+      Array.isArray(event.participants) &&
+      event.participants.includes(usrData["Id"])
+    );
+  };
+  const usersDict = resp.reduce((acc, user) => {
+    acc[user.id] = user.username;
+    return acc;
+  }, {});
 
-  useEffect(() => {
-    if (usrData.Id === -999) {
-      navigate("/");
-    } else {
-      ren();
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";").map((cookie) => cookie.trim());
+      for (let i = 0; i < cookies.length; i++) {
+        if (cookies[i].substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(
+            cookies[i].substring(name.length + 1)
+          );
+          break;
+        }
+      }
     }
-  }, [usrData.Id, navigate]);
+    return cookieValue;
+  }
 
-  const DateConverter = ({ dateString }) => {
-    const dateObjectUTC = new Date(`${dateString}T24:00:00Z`);
-    const dateObjectLocal = new Date(dateObjectUTC.toLocaleString());
-    const options = {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    };
-    const formattedDate = dateObjectLocal.toLocaleDateString(undefined, options);
-    return formattedDate;
-  };
-
-  const openPopup1 = (item) => {
-    setSelectedItem(item);
-    setStatus(item.approved ? "Approved" : item.denied ? "Denied" : "Pending");
-    setPopup1(true);
-  };
-
-  const closePopup1 = () => {
-    setSelectedItem(null);
-    setPopup1(false);
-  };
-
-  const openPopup2 = () => {
-    setPopup2(true);
-  };
-
-  const closePopup2 = () => {
-    setPopup2(false);
-  };
-
-  async function ren() {
+  async function EventSubmit(id) {
+    console.log(id);
     try {
-      const response2 = await axios.get(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/events/`
+      const token = localStorage.getItem("token");
+      const csrfToken = getCookie("csrftoken"); // Fetch the CSRF token from cookies
+
+      const response2 = await axios.post(
+        `http://127.0.0.1:8000/04D2430AAFE10AA4/registerevent/`,
+        {
+          user_id: usrData["Id"],
+          event_id: id,
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "X-CSRFToken": csrfToken, // Include the CSRF token in the headers
+          },
+        }
       );
-      setResp2(response2.data);
-      console.log(response2.data);
+      alert(response2.data.message);
+      fetchData();
+    } catch (error) {
+      console.log(error);
+      if (error.response && error.response.status === 400) {
+        alert("You have already signed up for that event");
+      } else {
+        alert(error);
+      }
+    }
+  }
+
+  const getNearby = async (dist) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/04D2430AAFE10AA4/nearby/${userLocation.latitude}/${userLocation.longitude}/${dist}/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setEvents(data["Events"]);
+      setDistance(data["Distances"]);
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+    }
+  };
+
+  async function fetchData() {
+    try {
+      const token = localStorage.getItem("token");
+
+      const participantsResponse = await axios.get(
+        `http://127.0.0.1:8000/04D2430AAFE10AA4/participants/${usrData["Id"]}/`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      setParticipants(participantsResponse.data);
+      console.log(participantsResponse.data);
     } catch (error) {
       console.log(error);
     }
   }
 
+  useEffect(() => {
+    fetchData();
+    getUserLocation();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation !== null) {
+      getNearby(5);
+    }
+  }, [userLocation]);
+
+  const handleRange = (event) => {
+    setDistance(Number(document.getElementById("range").value));
+
+    if (userLocation !== null) {
+      getNearby(Number(document.getElementById("range").value));
+    }
+  };
+
   return (
     <>
-      <img src={pattern} style={{ height: "100vh" }} className="absolute z-50 right-0 img" />
-      {isLoggedIn ? (
-        <div className="flex justify-center content-center w-auto h-auto bg-white">
-          <Navbar />
-          <div className="w-full h-auto rounded-lg mx-5 my-12 grid grid-cols-2 mt-20 text-black">
-            <h1 className="font-black absolute top-32 text-2xl left-10">Signed up Events</h1>
-            <div className="absolute left-5 top-40 scrollable-container">
-              {resp2.map((obj) => (
-                <div key={obj.id} className="notification NotWidth mb-3">
+      <img
+        src={pattern}
+        style={{ height: "100vh" }}
+        className="absolute top-0 z-50  right-0 img"
+      />
+      <Navbar />
+      <div className="w-screen h-screen bg-[--background] overflow-hidden flex">
+        <div className="w-1/3 mt-[10vh]">
+          <div className="inline">
+            <label htmlFor="range" className="nostyle text-white">
+              Events within{" "}
+            </label>
+            <select
+              name="range"
+              className="mx-auto text-center text-[1vw] ml-[40%] mt-[2vh]"
+              id="range"
+              onChange={handleRange}
+            >
+              <option value="5">5 miles</option>
+              <option value="15">15 miles</option>
+              <option value="25">25 miles</option>
+              <option value="50">50 miles</option>
+            </select>
+            <label htmlFor="range" className="nostyle mx-auto"></label>
+          </div>
+          <div className=" relative mb-[10vw]">
+            <div className="ml-[1vw] w-screen !h-[30vw] scrollable-container">
+              {events.map((obj, key) => (
+                <div
+                  className="notification mb-3 border border-4 border-white relative"
+                  key={key}
+                >
                   <div className="notiglow"></div>
                   <div className="notiborderglow"></div>
-                  <div className="notititle">{obj.Event_Name}</div>
-                  <div className="notibody">{obj.Event_Description}</div>
-                  <div className="notibody">{obj.Event_Location}, by {obj.Organization_Name}</div>
+                  <div className="notititle">{obj["Event_Name"]}</div>
+                  <div className="notibody">{obj["Event_Description"]}</div>
+
+                  <div className="notibody flex">
+                    {obj["Event_Location"]}
+                    {!isUserRegistered(events[key]) ? (
+                      <div className="ml-[20%]">
+                        <button
+                          type="button"
+                          className=" px-[0.5vw] py-[0.5vh] rounded-[0.5vw] bg-green-400 text-white"
+                          onClick={(e) => EventSubmit(obj["id"])}
+                        >
+                          Register
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="success-button-container ml-[20%] text-red-600 font-black">
+                        <p>You are already registered for this event.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-
-            {/* First Popup */}
-            {popup1 && (
-              <div className="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-gray-800 bg-opacity-75">
-                <div className="bg-white p-6 rounded-lg">
-                  <h1 className="font-black text-lg">Details</h1>
-                  <h2># of hours recorded: {selectedItem.hours}</h2>
-                  <br />
-                  <p>Work description: {selectedItem.work_description}</p>
-                  <br />
-                  <br />
-                  <p className="flex">
-                    Date: <DateConverter dateString={selectedItem.date} />
-                  </p>
-                  <p>Status: {status}</p>
-                  <br />
-                  <button onClick={closePopup1}>Close Popup</button>
-                </div>
-              </div>
-            )}
-
-            {/* Second Popup */}
-            {popup2 && (
-              <div className="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-gray-800 bg-opacity-75">
-                <div className="bg-white p-6 rounded-lg">
-                  <h1 className="font-black text-lg">Second Popup Content</h1>
-                  <button onClick={closePopup2}>Close Popup</button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
-      ) : (
-        navigate("/UnAuth")
-      )}
+        <div className="w-1/3 ml-[10vw] mt-[10vh]">
+          <div className="inline">
+            <label htmlFor="range" className="nostyle text-black mt-[6vh] ">
+              Signed Up Events:{" "}
+            </label>
+          </div>
+          <div className=" relative mt-[2vh]">
+            {participants["events_participated"] &&
+            participants["events_participated"].length > 0 ? (
+              <div className="ml-[1vw] w-screen !h-[30vw] scrollable-container">
+                {participants["events_participated"].map((obj, key) => (
+                  <div
+                    className="notification mb-3 border border-4 border-white"
+                    key={key}
+                  >
+                    <div className="notiglow"></div>
+                    <div className="notiborderglow"></div>
+                    <div className="notititle">{obj["Event_Name"]}</div>
+                    <div className="notibody">{obj["Event_Description"]}</div>
+                    <div className="notibody flex relative">
+                      {obj["Event_Location"]} @<br /> {obj["Event_Time_Start"]}{" "}
+                      to {obj["Event_Time_End"]}
+                      <button
+                        type="button"
+                        className="success-button-main absolute bottom-[1vh] right-[1vw] bg-green-400 mr-5 px-[1vw]"
+                        onClick={() => history("/event/" + obj["id"])}
+                      >
+                        Visit Items
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-events w-full h-full flex items-center justify-center text-gray-500">
+                No events participated yet.
+                <br /> Sign Up for one on the left
+              </div>
+            )}
+          </div>{" "}
+        </div>
+      </div>
     </>
   );
 };
