@@ -13,6 +13,7 @@ const Hours = () => {
   const [distance, setDistance] = useState(5);
   const { userLocation, getUserLocation } = useUserLocation();
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [signedUpEvents, setsignedUpEvents] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [err, seterr] = useState("");
@@ -26,6 +27,7 @@ const Hours = () => {
   if (usrData["Id"] === -999) {
     history("/");
   }
+
   const isUserRegistered = (event) => {
     return (
       event.participants &&
@@ -33,6 +35,7 @@ const Hours = () => {
       event.participants.includes(usrData["Id"])
     );
   };
+
   const usersDict = resp.reduce((acc, user) => {
     acc[user.id] = user.username;
     return acc;
@@ -55,13 +58,12 @@ const Hours = () => {
   }
 
   async function EventSubmit(id) {
-    console.log(id);
     try {
       const token = localStorage.getItem("token");
-      const csrfToken = getCookie("csrftoken"); // Fetch the CSRF token from cookies
+      const csrfToken = getCookie("csrftoken");
 
       const response2 = await axios.post(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/registerevent/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/registerevent/`,
         {
           user_id: usrData["Id"],
           event_id: id,
@@ -69,7 +71,7 @@ const Hours = () => {
         {
           headers: {
             Authorization: `Token ${token}`,
-            "X-CSRFToken": csrfToken, // Include the CSRF token in the headers
+            "X-CSRFToken": csrfToken,
           },
         }
       );
@@ -88,7 +90,9 @@ const Hours = () => {
   const getNearby = async (dist) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/nearby/${userLocation.latitude}/${userLocation.longitude}/${dist}/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/nearby/${
+          userLocation.latitude
+        }/${userLocation.longitude}/${dist}/`,
         {
           method: "GET",
           headers: {
@@ -115,7 +119,9 @@ const Hours = () => {
       const token = localStorage.getItem("token");
 
       const participantsResponse = await axios.get(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/participants/${usrData["Id"]}/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/participants/${
+          usrData["Id"]
+        }/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -131,6 +137,7 @@ const Hours = () => {
   }
 
   useEffect(() => {
+    setLoading(true);
     fetchData();
     getUserLocation();
   }, []);
@@ -139,6 +146,7 @@ const Hours = () => {
     if (userLocation !== null) {
       getNearby(5);
     }
+    setLoading(false);
   }, [userLocation]);
 
   const handleRange = (event) => {
@@ -176,38 +184,46 @@ const Hours = () => {
             </select>
             <label htmlFor="range" className="nostyle mx-auto"></label>
           </div>
-          <div className=" relative mb-[10vw]">
+          <div className="relative mb-[10vw]">
             <div className="ml-[1vw] w-screen !h-[30vw] scrollable-container">
-              {events.map((obj, key) => (
-                <div
-                  className="notification mb-3 border border-4 border-white relative"
-                  key={key}
-                >
-                  <div className="notiglow"></div>
-                  <div className="notiborderglow"></div>
-                  <div className="notititle">{obj["Event_Name"]}</div>
-                  <div className="notibody">{obj["Event_Description"]}</div>
+              {loading ? (
+                <div className="loading-spinner ml-40">Loading events...</div>
+              ) : events.length > 0 ? (
+                events.map((obj, key) => (
+                  <div
+                    className="notification mb-3 border border-4 border-white relative"
+                    key={key}
+                  >
+                    <div className="notiglow"></div>
+                    <div className="notiborderglow"></div>
+                    <div className="notititle">{obj["Event_Name"]}</div>
+                    <div className="notibody">{obj["Event_Description"]}</div>
 
-                  <div className="notibody flex">
-                    {obj["Event_Location"]}
-                    {!isUserRegistered(events[key]) ? (
-                      <div className="ml-[20%]">
-                        <button
-                          type="button"
-                          className=" px-[0.5vw] py-[0.5vh] rounded-[0.5vw] bg-green-400 text-white"
-                          onClick={(e) => EventSubmit(obj["id"])}
-                        >
-                          Register
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="success-button-container ml-[20%] text-red-600 font-black">
-                        <p>You are already registered for this event.</p>
-                      </div>
-                    )}
+                    <div className="notibody flex">
+                      {obj["Event_Location"]}
+                      {!isUserRegistered(events[key]) ? (
+                        <div className="ml-[20%]">
+                          <button
+                            type="button"
+                            className=" px-[0.5vw] py-[0.5vh] rounded-[0.5vw] bg-green-400 text-white"
+                            onClick={(e) => EventSubmit(obj["id"])}
+                          >
+                            Register
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="success-button-container ml-[20%] text-red-600 font-black">
+                          <p>You are already registered for this event.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="no-events text-gray-500 ml-40">
+                  No events near you at this time.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

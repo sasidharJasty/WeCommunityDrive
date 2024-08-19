@@ -13,21 +13,26 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [UserType, setUserType] = useState("Volunteer"); 
+  const [UserType, setUserType] = useState("Volunteer");
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/04D2430AAFE10AA4/signup/", {
-        email: email,
-        username: username,
-        password: password,
-        userType: UserType,
-      });
-      if (UserType === "Organizer"){
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/signup/`,
+        {
+          email: email,
+          username: username,
+          password: password,
+          userType: UserType,
+        }
+      );
+      if (UserType === "Organizer") {
         history("/orgevent/");
-      }else {  history("/");}
-      
+      } else {
+        history("/");
+      }
+
       setErr("");
       const token = response.data.token;
 
@@ -43,10 +48,13 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/04D2430AAFE10AA4/login/", {
-        username: loginEmail,
-        password: loginPassword,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/login/`,
+        {
+          username: loginEmail,
+          password: loginPassword,
+        }
+      );
       history("/");
       setErr("");
       console.log(response);
@@ -63,7 +71,11 @@ export default function Login() {
 
   return (
     <>
-      <img src={pattern} style={{ height: "100vh" }} className="absolute right-0" />
+      <img
+        src={pattern}
+        style={{ height: "100vh" }}
+        className="absolute right-0"
+      />
       <div className="main absolute mt-10">
         <input type="checkbox" id="chk" aria-hidden="true" />
 
@@ -75,17 +87,50 @@ export default function Login() {
             <p className="text-red-600 font-bold text-center mb-5">{err}</p>
             <div className="radio-inputs">
               <label className="radio">
-                <input type="radio" name="userType" value="Volunteer" checked={UserType === "Volunteer"} onChange={() => setUserType("Volunteer")} />
+                <input
+                  type="radio"
+                  name="userType"
+                  value="Volunteer"
+                  checked={UserType === "Volunteer"}
+                  onChange={() => setUserType("Volunteer")}
+                />
                 <span className="name">Volunteer</span>
               </label>
               <label className="radio">
-                <input type="radio" name="userType" value="Organizer" checked={UserType === "Organizer"} onChange={() => setUserType("Organizer")} />
+                <input
+                  type="radio"
+                  name="userType"
+                  value="Organizer"
+                  checked={UserType === "Organizer"}
+                  onChange={() => setUserType("Organizer")}
+                />
                 <span className="name">Organizer</span>
               </label>
             </div>
-            <input className="py-5 m-auto mb-5" type="name" name="txt" placeholder="Full Name: " required="" onChange={(e) => setUsername(e.target.value)} />
-            <input className="py-5 m-auto mb-5" type="email" name="email" placeholder="Email: " required="" onChange={(e) => setEmail(e.target.value)} />
-            <input className="py-5 m-auto mb-5" type="password" name="pswd" placeholder="Password" required="" onChange={(e) => setPassword(e.target.value)} />
+            <input
+              className="py-5 m-auto mb-5"
+              type="name"
+              name="txt"
+              placeholder="Full Name: "
+              required=""
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <input
+              className="py-5 m-auto mb-5"
+              type="email"
+              name="email"
+              placeholder="Email: "
+              required=""
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              className="py-5 m-auto mb-5"
+              type="password"
+              name="pswd"
+              placeholder="Password"
+              required=""
+              onChange={(e) => setPassword(e.target.value)}
+            />
             <button className="m-auto button" type="submit">
               Sign Up
             </button>
@@ -98,8 +143,22 @@ export default function Login() {
               Login
             </label>
             <p className="text-red-600 font-bold text-center mb-5">{err}</p>
-            <input className="py-5 m-auto mb-5" type="email" name="email" placeholder="Email: " required="" onChange={(e) => setLoginEmail(e.target.value)} />
-            <input className="py-5 m-auto mb-5" type="password" name="pswd" placeholder="Password" required="" onChange={(e) => setLoginPassword(e.target.value)} />
+            <input
+              className="py-5 m-auto mb-5"
+              type="email"
+              name="email"
+              placeholder="Email: "
+              required=""
+              onChange={(e) => setLoginEmail(e.target.value)}
+            />
+            <input
+              className="py-5 m-auto mb-5"
+              type="password"
+              name="pswd"
+              placeholder="Password"
+              required=""
+              onChange={(e) => setLoginPassword(e.target.value)}
+            />
             <button className="button" type="submit">
               Log In
             </button>

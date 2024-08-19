@@ -29,7 +29,9 @@ export default function Event() {
     try {
       const token = localStorage.getItem("token");
       const YourEvents = await axios.get(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/events/?user_id=${usrData.Id}`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/events/?user_id=${
+          usrData.Id
+        }`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -61,7 +63,7 @@ export default function Event() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/04D2430AAFE10AA4/orgevent/",
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/orgevent/`,
         {
           user_id: usrData["Id"],
           Username: usrData["User"],
@@ -168,7 +170,7 @@ export default function Event() {
         </h1>
       )}
       <div
-        className={`main2 left-[50vw] absolute w-11/12 mt-10 ${
+        className={`main2 left-[50vw] -bottom-[20vh] absolute w-11/12 mt-10 ${
           popup ? "" : "hidden"
         }`}
       >

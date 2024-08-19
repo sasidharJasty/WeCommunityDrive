@@ -34,7 +34,7 @@ const EventDetails = () => {
   const fetchEventData = async () => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/events/${eventId}`
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/events/${eventId}`
       );
       console.log("Response data:", response.data); // Log the entire response
       let eventString = response.data.event;
@@ -59,7 +59,7 @@ const EventDetails = () => {
   async function addItem() {
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/add_item/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/add_item/`,
         {
           event_id: eventId,
           item: item.toLowerCase(),
@@ -85,7 +85,7 @@ const EventDetails = () => {
   async function editItem() {
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/edit_item/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/edit_item/`,
         {
           event_id: eventId,
           item: editItemName.toLowerCase(),
@@ -111,7 +111,7 @@ const EventDetails = () => {
   async function deleteItem(itemName) {
     try {
       const response = await axios.delete(
-        `http://127.0.0.1:8000/04D2430AAFE10AA4/delete_item/`,
+        `${import.meta.env.VITE_BACKEND_URL}04D2430AAFE10AA4/delete_item/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -174,12 +174,6 @@ const EventDetails = () => {
             onClick={() => setPopup(true)}
           >
             Add Items +
-          </button>
-          <button
-            className="m-auto mt-[5vh] w-[20vw] button ml-5 text-center "
-            onClick={() => history("/scan-barcode")}
-          >
-            Scan
           </button>
         </div>
       </div>
